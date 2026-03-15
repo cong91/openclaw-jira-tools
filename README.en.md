@@ -60,8 +60,24 @@ openclaw-jira-tools/
 │   ├── lib/
 │   ├── shared/
 │   └── tools/
+├── skill/
+│   └── jira/
+│       ├── SKILL.md
+│       └── _meta.json
 └── dist/
 ```
+
+## Bundled skill
+This repository also ships a Jira skill to guide agents on how to use the toolset correctly:
+- `skill/jira/SKILL.md`
+- `skill/jira/_meta.json`
+
+The bundled skill documents:
+- issue classification rules
+- Vietnamese issue/comment templates
+- user intent → Jira tool mapping
+- rules for preferring `jira-tools` over host `jira-cli`
+- defaults strategy so agents do not forget configuration
 
 ## Local install
 ```bash

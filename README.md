@@ -62,8 +62,24 @@ openclaw-jira-tools/
 │   ├── lib/
 │   ├── shared/
 │   └── tools/
+├── skill/
+│   └── jira/
+│       ├── SKILL.md
+│       └── _meta.json
 └── dist/
 ```
+
+## Skill đi kèm
+Repo này mang kèm skill Jira để hướng dẫn agent dùng bộ tools đúng flow:
+- `skill/jira/SKILL.md`
+- `skill/jira/_meta.json`
+
+Skill này mô tả:
+- chuẩn phân loại issue
+- template tiếng Việt
+- mapping ý định user → tool Jira tương ứng
+- rule dùng `jira-tools` thay cho shell-out `jira-cli`
+- rule defaults để agent không quên config
 
 ## Cài local
 ```bash
