@@ -83,10 +83,10 @@ Skill này mô tả:
 
 ## Cài đặt đúng từ npm
 
-> Package npm: https://www.npmjs.com/package/openclaw-jira-tools
+> Package npm: https://www.npmjs.com/package/@mrc2204/openclaw-jira-tools
 
 ```bash
-openclaw plugins install openclaw-jira-tools
+openclaw plugins install @mrc2204/openclaw-jira-tools
 ```
 
 Nếu cần môi trường development/local thì dùng path install riêng, không dùng flow này để khóa version.
