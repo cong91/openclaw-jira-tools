@@ -81,7 +81,21 @@ Skill này mô tả:
 - rule dùng `jira-tools` thay cho shell-out `jira-cli`
 - rule defaults để agent không quên config
 
-## Cài local
+## Cài đặt đúng từ npm
+
+> Package npm: https://www.npmjs.com/package/openclaw-jira-tools
+
+```bash
+openclaw plugins install openclaw-jira-tools --pin
+```
+
+Hoặc cài đúng version cụ thể:
+
+```bash
+openclaw plugins install openclaw-jira-tools@1.0.0 --pin
+```
+
+## Cài local cho phát triển
 ```bash
 cd ~/Work/projects/jira-tools
 npm install
@@ -93,9 +107,6 @@ openclaw plugins install -l ~/Work/projects/jira-tools
 ```json5
 {
   plugins: {
-    load: {
-      paths: ["~/Work/projects/jira-tools"]
-    },
     entries: {
       "jira-tools": {
         enabled: true,

@@ -79,7 +79,21 @@ The bundled skill documents:
 - rules for preferring `jira-tools` over host `jira-cli`
 - defaults strategy so agents do not forget configuration
 
-## Local install
+## Correct install from npm
+
+> npm package: https://www.npmjs.com/package/openclaw-jira-tools
+
+```bash
+openclaw plugins install openclaw-jira-tools --pin
+```
+
+Or install a specific version:
+
+```bash
+openclaw plugins install openclaw-jira-tools@1.0.0 --pin
+```
+
+## Local install for development
 ```bash
 cd ~/Work/projects/jira-tools
 npm install
@@ -91,9 +105,6 @@ openclaw plugins install -l ~/Work/projects/jira-tools
 ```json5
 {
   plugins: {
-    load: {
-      paths: ["~/Work/projects/jira-tools"]
-    },
     entries: {
       "jira-tools": {
         enabled: true,
