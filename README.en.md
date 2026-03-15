@@ -84,14 +84,10 @@ The bundled skill documents:
 > npm package: https://www.npmjs.com/package/openclaw-jira-tools
 
 ```bash
-openclaw plugins install openclaw-jira-tools --pin
+openclaw plugins install openclaw-jira-tools
 ```
 
-Or install a specific version:
-
-```bash
-openclaw plugins install openclaw-jira-tools@1.0.0 --pin
-```
+If you need a local/development workflow, use path-based install separately instead of locking a specific version here.
 
 ## Local install for development
 ```bash
