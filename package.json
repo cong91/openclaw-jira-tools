@@ -1,6 +1,6 @@
 {
-  "name": "@mrc2204/jira-tools",
-  "version": "0.1.0",
+  "name": "openclaw-jira-tools",
+  "version": "1.0.0",
   "description": "Native Jira tools plugin for OpenClaw",
   "repository": {
     "type": "git",
@@ -29,6 +29,8 @@
   "files": [
     "dist/",
     "openclaw.plugin.json",
-    "README.md"
+    "README.md",
+    "README.en.md",
+    "skill/"
   ]
 }
