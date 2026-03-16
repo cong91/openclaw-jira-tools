@@ -300,6 +300,7 @@ Quy tắc chống nhiễu:
 - `jira_open`
 - `jira_issue_edit`
 - `jira_issue_assign`
+- `jira_issue_attachment_add`
 - `jira_issue_comment_add`
 - `jira_issue_clone`
 - `jira_issue_delete`
@@ -336,6 +337,7 @@ Quy tắc chống nhiễu:
 - Người dùng nói **"mở issue"** → dùng `jira_open`
 - Người dùng nói **"sửa issue"** → dùng `jira_issue_edit`
 - Người dùng nói **"assign issue"** → dùng `jira_issue_assign`
+- Người dùng nói **"upload file / đính kèm file / attach artifact thật"** → dùng `jira_issue_attachment_add`
 - Người dùng nói **"comment / cập nhật tiến độ"** → dùng `jira_issue_comment_add`
 - Người dùng nói **"clone issue"** → dùng `jira_issue_clone`
 - Người dùng nói **"watch issue"** → dùng `jira_issue_watch`
