@@ -1,3 +1,4 @@
+import { createReadStream, existsSync, statSync } from "node:fs";
 import type { JiraCreateInput, JiraDefaultsRecord, JiraToolsConfig } from "../shared/types.js";
 
 export interface JiraResolvedConfig {
@@ -14,11 +15,12 @@ export interface JiraResolvedConfig {
 export class JiraClient {
   constructor(private readonly config: JiraResolvedConfig) {}
 
-  private headers() {
+  private headers(extra?: Record<string, string>) {
     return {
       "Accept": "application/json",
       "Content-Type": "application/json",
       "Authorization": `Basic ${Buffer.from(`${this.config.email}:${this.config.token}`).toString("base64")}`,
+      ...(extra || {}),
     };
   }
 
@@ -31,6 +33,13 @@ export class JiraClient {
     const payload = text ? JSON.parse(text) : {};
     if (!res.ok) throw new Error(`${res.status}: ${JSON.stringify(payload)}`);
     return payload;
+  }
+
+  async requestRaw(path: string, init?: RequestInit): Promise<Response> {
+    return fetch(`${this.config.server}${path}`, {
+      ...init,
+      headers: { ...(init?.headers || {}), Authorization: `Basic ${Buffer.from(`${this.config.email}:${this.config.token}`).toString("base64")}` },
+    });
   }
 
   issueUrl(issueKey: string): string {
@@ -94,6 +103,30 @@ export class JiraClient {
 
   async createIssue(fields: Record<string, any>) {
     return this.request(`/rest/api/3/issue`, { method: "POST", body: JSON.stringify({ fields }) });
+  }
+
+  async uploadAttachment(issueKey: string, filePath: string): Promise<any> {
+    if (!existsSync(filePath)) throw new Error(`File không tồn tại: ${filePath}`);
+    const st = statSync(filePath);
+    if (!st.isFile()) throw new Error(`Đường dẫn không phải file: ${filePath}`);
+    const { FormData, File } = globalThis as any;
+    if (!FormData || !File) throw new Error("Runtime thiếu FormData/File để upload attachment");
+    const fs = await import('node:fs/promises');
+    const path = await import('node:path');
+    const buffer = await fs.readFile(filePath);
+    const form = new FormData();
+    form.append('file', new File([buffer], path.basename(filePath)));
+    const res = await this.requestRaw(`/rest/api/3/issue/${issueKey}/attachments`, {
+      method: 'POST',
+      headers: {
+        'X-Atlassian-Token': 'no-check',
+      },
+      body: form as any,
+    });
+    const text = await res.text();
+    const payload = text ? JSON.parse(text) : {};
+    if (!res.ok) throw new Error(`${res.status}: ${JSON.stringify(payload)}`);
+    return payload;
   }
 }
 

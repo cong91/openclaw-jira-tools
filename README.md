@@ -27,6 +27,7 @@ Plugin OpenClaw chuẩn để đăng ký native Jira tools cho agent, giúp agen
 - `jira_open`
 - `jira_issue_edit`
 - `jira_issue_assign`
+- `jira_issue_attachment_add`
 - `jira_issue_comment_add`
 - `jira_issue_clone`
 - `jira_issue_delete`

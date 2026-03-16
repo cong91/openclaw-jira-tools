@@ -199,6 +199,39 @@ export function registerManagementTools(api: OpenClawPluginApi, rawConfig: JiraT
   }, { optional: true });
 
   api.registerTool({
+    name: "jira_issue_attachment_add",
+    label: "Jira Issue Attachment Add",
+    description: "Upload file thật lên Jira issue qua Attachment API; dùng khi cần đính kèm artifact/bằng chứng thay vì chỉ comment path.",
+    parameters: {
+      type: "object",
+      properties: {
+        issueKey: { type: "string" },
+        filePath: { type: "string" },
+        comment: { type: "string" }
+      },
+      required: ["issueKey", "filePath"]
+    },
+    async execute(_id: string, params: any) {
+      try {
+        const upload = await client.uploadAttachment(params.issueKey, params.filePath);
+        if (params.comment) {
+          const payload: any = {
+            body: {
+              type: "doc",
+              version: 1,
+              content: [{ type: "paragraph", content: [{ type: "text", text: params.comment }] }],
+            },
+          };
+          await client.request(`/rest/api/3/issue/${params.issueKey}/comment`, { method: "POST", body: JSON.stringify(payload) });
+        }
+        return createToolResult(JSON.stringify({ ok: true, issueKey: params.issueKey, uploaded: upload, url: client.issueUrl(params.issueKey) }, null, 2));
+      } catch (e) {
+        return createToolResult(`Error: ${e instanceof Error ? e.message : String(e)}`, true);
+      }
+    },
+  }, { optional: true });
+
+  api.registerTool({
     name: "jira_issue_comment_add",
     label: "Jira Issue Comment Add",
     description: "Thêm comment vào issue bằng tiếng Việt; dùng cho cập nhật tiến độ, bằng chứng, blocker hoặc note nội bộ.",
