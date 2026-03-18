@@ -40,7 +40,7 @@ Plugin OpenClaw chuẩn để đăng ký native Jira tools cho agent, giúp agen
 ### Epic / project / board / sprint / release
 - `jira_epic_list`
 - `jira_epic_view`
-- `jira_epic_add`
+- `jira_epic_add` *(có fallback nhiều cách, nếu Jira instance chặn retroactive epic assignment thì trả lỗi rõ và hướng workaround)*
 - `jira_epic_remove`
 - `jira_project_list`
 - `jira_project_view`

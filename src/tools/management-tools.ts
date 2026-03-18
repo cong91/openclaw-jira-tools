@@ -483,14 +483,49 @@ export function registerManagementTools(api: OpenClawPluginApi, rawConfig: JiraT
   api.registerTool({
     name: "jira_epic_add",
     label: "Jira Epic Add",
-    description: "Gán một hoặc nhiều issue vào epic qua Epic Link field.",
+    description: "Gán một hoặc nhiều issue vào epic. Tool sẽ thử flow phù hợp trước; nếu Jira instance không hỗ trợ gắn retroactive cho issue hiện có thì trả lỗi rõ nguyên nhân và hướng workaround.",
     parameters: { type: "object", properties: { epicKey: { type: "string" }, issueKeys: { type: "array", items: { type: "string" } } }, required: ["epicKey", "issueKeys"] },
     async execute(_id: string, params: any) {
       try {
         const results = [];
         for (const issueKey of params.issueKeys || []) {
-          const out = await client.request(`/rest/api/3/issue/${issueKey}`, { method: "PUT", body: JSON.stringify({ fields: { [client["config"].fieldMappings.epicLink]: params.epicKey } }) });
-          results.push({ issueKey, result: out || {} });
+          try {
+            const agileOut = await client.request(`/rest/agile/1.0/epic/${params.epicKey}/issue`, {
+              method: "POST",
+              body: JSON.stringify({ issues: [issueKey] }),
+            });
+            results.push({ issueKey, method: 'agile-epic-add', result: agileOut || {} });
+            continue;
+          } catch (agileErr) {
+            const agileMsg = agileErr instanceof Error ? agileErr.message : String(agileErr);
+            try {
+              const parentOut = await client.request(`/rest/api/3/issue/${issueKey}`, {
+                method: "PUT",
+                body: JSON.stringify({ fields: { parent: { key: params.epicKey } } }),
+              });
+              results.push({ issueKey, method: 'parent-field', result: parentOut || {} });
+              continue;
+            } catch (parentErr) {
+              const parentMsg = parentErr instanceof Error ? parentErr.message : String(parentErr);
+              try {
+                const epicLinkOut = await client.request(`/rest/api/3/issue/${issueKey}`, {
+                  method: "PUT",
+                  body: JSON.stringify({ fields: { [client["config"].fieldMappings.epicLink]: params.epicKey } }),
+                });
+                results.push({ issueKey, method: 'epic-link-field', result: epicLinkOut || {} });
+                continue;
+              } catch (fieldErr) {
+                const fieldMsg = fieldErr instanceof Error ? fieldErr.message : String(fieldErr);
+                throw new Error(
+                  `Không thể gắn issue ${issueKey} vào epic ${params.epicKey}. ` +
+                  `Đã thử 3 cách: agile endpoint, parent field, Epic Link field. ` +
+                  `Chi tiết: agile=[${agileMsg}] parent=[${parentMsg}] epicLink=[${fieldMsg}]. ` +
+                  `Kết luận: Jira instance/project hiện không hỗ trợ gắn retroactive cho issue này. ` +
+                  `Workaround khuyến nghị: tạo issue mới ngay từ đầu bằng jira_create_task với tham số epic=${params.epicKey}, hoặc recreate/clone issue vào epic thay vì add sau.`
+                );
+              }
+            }
+          }
         }
         return createToolResult(JSON.stringify({ ok: true, results }, null, 2));
       } catch (e) {

@@ -38,7 +38,7 @@ Native OpenClaw plugin that registers Jira tools for agents, helping them use Ji
 ### Epic / project / board / sprint / release
 - `jira_epic_list`
 - `jira_epic_view`
-- `jira_epic_add`
+- `jira_epic_add` *(tries multiple strategies and returns a clear workaround when the Jira instance blocks retroactive epic assignment)*
 - `jira_epic_remove`
 - `jira_project_list`
 - `jira_project_view`
