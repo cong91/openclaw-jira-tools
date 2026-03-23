@@ -5,7 +5,7 @@ import { registerManagementTools } from "./tools/management-tools.js";
 const plugin = {
     id: "openclaw-jira-tools",
     name: "Jira Tools",
-    version: "1.0.4",
+    version: "1.0.5",
     register(api) {
         const rawConfig = (api.pluginConfig || api?.config?.plugins?.entries?.["openclaw-jira-tools"]?.config || api?.config?.plugins?.entries?.["jira-tools"]?.config || {});
         if (!rawConfig.server || !rawConfig.email || !rawConfig.token) {

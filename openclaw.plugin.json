@@ -2,7 +2,7 @@
   "id": "openclaw-jira-tools",
   "name": "Jira Tools",
   "description": "Native Jira agent tools for OpenClaw with config schema and per-agent defaults.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

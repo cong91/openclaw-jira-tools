@@ -297,6 +297,7 @@ Quy tắc chống nhiễu:
 ## Nhóm issue management
 - `jira_issue_list`
 - `jira_issue_view`
+- `jira_issue_transitions`
 - `jira_open`
 - `jira_issue_edit`
 - `jira_issue_assign`
@@ -333,6 +334,7 @@ Quy tắc chống nhiễu:
 - Người dùng nói **"set mặc định / nhớ config Jira"** → dùng `jira_set_defaults`
 - Người dùng nói **"xem project / inspect field / xem create screen"** → dùng `jira_inspect_project` hoặc `jira_project_view`
 - Người dùng nói **"xem issue"** → dùng `jira_issue_view`
+  - Nếu sắp sửa transition thì ưu tiên đọc thêm `availableTransitions` hoặc gọi thẳng `jira_issue_transitions`
 - Người dùng nói **"list issue / tìm issue"** → dùng `jira_issue_list`
 - Người dùng nói **"mở issue"** → dùng `jira_open`
 - Người dùng nói **"sửa issue"** → dùng `jira_issue_edit`
@@ -341,7 +343,8 @@ Quy tắc chống nhiễu:
 - Người dùng nói **"comment / cập nhật tiến độ"** → dùng `jira_issue_comment_add`
 - Người dùng nói **"clone issue"** → dùng `jira_issue_clone`
 - Người dùng nói **"watch issue"** → dùng `jira_issue_watch`
-- Người dùng nói **"transition / move issue"** → dùng `jira_issue_move`
+- Người dùng nói **"xem transition / list transition / transition id nào hợp lệ"** → dùng `jira_issue_transitions`
+- Người dùng nói **"transition / move issue"** → dùng `jira_issue_transitions` trước, sau đó mới dùng `jira_issue_move`
 - Người dùng nói **"log work / worklog"** → dùng `jira_issue_worklog_add`
 - Người dùng nói **"link / unlink issue"** → dùng `jira_issue_link` / `jira_issue_unlink`
 - Người dùng nói **"gắn issue vào epic"** → dùng `jira_epic_add`
@@ -367,7 +370,56 @@ Các defaults nên tận dụng:
 - `templateEpic`
 - `templateSubtask`
 
-## 6.4) Quy tắc vận hành với Epic Name / screen config
+## 6.4) Flow transition an toàn (mới)
+
+Root cause cũ của Jira transition flow là **write-only**:
+- có `jira_issue_move(issueKey, transitionId)`
+- nhưng không có surface đọc transition ids hợp lệ trước khi move
+- agent buộc phải đoán `transitionId`, nên automation không an toàn
+
+Từ nay flow chuẩn bắt buộc là:
+1. `jira_issue_transitions(issueKey)`
+2. đọc `transitionId` hợp lệ từ output
+3. `jira_issue_move(issueKey, transitionId)`
+
+## Structured output tối thiểu cần đọc từ `jira_issue_transitions`
+- `issueKey`
+- `currentStatus`
+- `transitions[]`
+  - `id`
+  - `name`
+  - `to.name`
+  - `to.statusCategory`
+  - `to.isDoneCategory`
+  - `hasScreen`
+  - `raw`
+
+## Quy tắc dùng transition
+- **Không được đoán** `transitionId`
+- **Không hardcode** workflow name hoặc id
+- Nếu cần move issue, phải đọc transitions trước
+- Nếu `transitions` rỗng, coi như **không có transition khả dụng**, không retry mù
+- Nếu `jira_issue_move` báo `invalid_transition_id`, phải quay lại bước đọc transitions thay vì thử số khác
+
+## Surface lỗi transition cần hiểu đúng
+- `auth_error`
+- `permission_error`
+- `issue_not_found`
+- `transitions_unavailable`
+- `invalid_transition_id`
+
+## Ví dụ flow chuẩn
+```text
+jira_issue_transitions("VAT-185")
+-> thấy:
+   - 21 = In Progress
+   - 31 = Done
+
+jira_issue_move("VAT-185", "31")
+-> move sang Done an toàn
+```
+
+## 6.5) Quy tắc vận hành với Epic Name / screen config
 
 Nếu Jira screen không cho set field Epic Name hoặc field custom khác:
 - không retry mù quáng
@@ -418,6 +470,7 @@ Nếu Jira screen không cho set field Epic Name hoặc field custom khác:
 5. Nếu `jira-tools` khả dụng, không ưu tiên shell command `jira ...`; chỉ dùng native tools đã register.
 6. Khi có thể dùng plugin id `jira-tools`, coi đó là bộ Jira group thực tế trong allowlist của agent.
 7. Khi tool đã đủ schema/params, không được tự bịa field ngoài screen Jira; phải sanitize hoặc inspect trước.
+8. Với workflow transition, luôn coi `jira_issue_transitions` là bước đọc bắt buộc trước `jira_issue_move`; không được move mù bằng id đoán.
 
 ---
 

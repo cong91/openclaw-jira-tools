@@ -8,7 +8,7 @@ import type { JiraToolsConfig } from "./shared/types.js";
 const plugin = {
   id: "openclaw-jira-tools",
   name: "Jira Tools",
-  version: "1.0.4",
+  version: "1.0.5",
   register(api: OpenClawPluginApi) {
     const rawConfig = ((api as any).pluginConfig || (api as any)?.config?.plugins?.entries?.["openclaw-jira-tools"]?.config || (api as any)?.config?.plugins?.entries?.["jira-tools"]?.config || {}) as JiraToolsConfig;
     if (!rawConfig.server || !rawConfig.email || !rawConfig.token) {
