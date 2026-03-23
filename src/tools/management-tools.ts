@@ -3,6 +3,47 @@ import { JiraClient } from "../lib/jira-client.js";
 import { createToolResult } from "../lib/runtime.js";
 import type { JiraToolsConfig } from "../shared/types.js";
 
+function normalizeJiraError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  let status: number | undefined;
+  let payload: any = undefined;
+  const m = message.match(/^(\d{3}):\s*(.*)$/s);
+  if (m) {
+    status = Number(m[1]);
+    try {
+      payload = JSON.parse(m[2]);
+    } catch {
+      payload = { raw: m[2] };
+    }
+  }
+  const text = JSON.stringify(payload || {}).toLowerCase();
+  let category = "unknown_error";
+  if (status === 401) category = "auth_error";
+  else if (status === 403) category = "permission_error";
+  else if (status === 404) category = "issue_not_found";
+  else if (status === 400) category = text.includes("transition") ? "transitions_unavailable" : "bad_request";
+  return { category, status, message, payload };
+}
+
+function formatTransitions(issueKey: string, issue: any, transitionsData: any) {
+  const transitions = Array.isArray(transitionsData?.transitions) ? transitionsData.transitions : [];
+  return {
+    issueKey,
+    currentStatus: issue?.fields?.status?.name || null,
+    transitions: transitions.map((t: any) => ({
+      id: String(t.id),
+      name: t.name || null,
+      to: {
+        name: t.to?.name || null,
+        statusCategory: t.to?.statusCategory?.key || t.to?.statusCategory?.name || null,
+        isDoneCategory: (t.to?.statusCategory?.key || "") === "done",
+      },
+      hasScreen: Boolean(t.hasScreen),
+      raw: t,
+    })),
+  };
+}
+
 function makeClient(rawConfig: JiraToolsConfig) {
   return new JiraClient({
     server: rawConfig.server.replace(/\/$/, ""),
@@ -125,9 +166,48 @@ export function registerManagementTools(api: OpenClawPluginApi, rawConfig: JiraT
     async execute(_id: string, params: any) {
       try {
         const data = await client.getIssue(params.issueKey);
-        return createToolResult(JSON.stringify(data, null, 2));
+        let availableTransitions: any[] = [];
+        try {
+          const transitionsData = await client.getIssueTransitions(params.issueKey);
+          availableTransitions = formatTransitions(params.issueKey, data, transitionsData).transitions;
+        } catch {
+          availableTransitions = [];
+        }
+        return createToolResult(JSON.stringify({ ...data, availableTransitions }, null, 2));
       } catch (e) {
         return createToolResult(`Error: ${e instanceof Error ? e.message : String(e)}`, true);
+      }
+    },
+  }, { optional: true });
+
+  api.registerTool({
+    name: "jira_issue_transitions",
+    label: "Jira Issue Transitions",
+    description: "Liệt kê các transitions khả dụng của một issue để agent discover transition id hợp lệ trước khi move issue.",
+    parameters: { type: "object", properties: { issueKey: { type: "string" } }, required: ["issueKey"] },
+    async execute(_id: string, params: any) {
+      try {
+        const issue = await client.getIssue(params.issueKey);
+        const transitionsData = await client.getIssueTransitions(params.issueKey);
+        const result = formatTransitions(params.issueKey, issue, transitionsData);
+        if (result.transitions.length === 0) {
+          return createToolResult(JSON.stringify({
+            ...result,
+            ok: true,
+            message: "Issue hiện không có transition khả dụng.",
+          }, null, 2));
+        }
+        return createToolResult(JSON.stringify({ ok: true, ...result }, null, 2));
+      } catch (e) {
+        const err = normalizeJiraError(e);
+        return createToolResult(JSON.stringify({
+          ok: false,
+          issueKey: params.issueKey,
+          error: err.category,
+          status: err.status || null,
+          message: err.message,
+          details: err.payload || null,
+        }, null, 2), true);
       }
     },
   }, { optional: true });
@@ -353,10 +433,40 @@ export function registerManagementTools(api: OpenClawPluginApi, rawConfig: JiraT
     parameters: { type: "object", properties: { issueKey: { type: "string" }, transitionId: { type: "string" } }, required: ["issueKey", "transitionId"] },
     async execute(_id: string, params: any) {
       try {
+        const before = await client.getIssue(params.issueKey);
+        const transitionsData = await client.getIssueTransitions(params.issueKey);
+        const formatted = formatTransitions(params.issueKey, before, transitionsData);
+        const matched = formatted.transitions.find((t: any) => t.id === String(params.transitionId));
+        if (!matched) {
+          return createToolResult(JSON.stringify({
+            ok: false,
+            issueKey: params.issueKey,
+            error: "invalid_transition_id",
+            message: `Transition id ${params.transitionId} không hợp lệ cho issue ${params.issueKey}.`,
+            availableTransitions: formatted.transitions,
+          }, null, 2), true);
+        }
         const data = await client.request(`/rest/api/3/issue/${params.issueKey}/transitions`, { method: "POST", body: JSON.stringify({ transition: { id: params.transitionId } }) });
-        return createToolResult(JSON.stringify({ ok: true, result: data || {} }, null, 2));
+        const after = await client.getIssue(params.issueKey);
+        return createToolResult(JSON.stringify({
+          ok: true,
+          issueKey: params.issueKey,
+          transition: matched,
+          fromStatus: before?.fields?.status?.name || null,
+          toStatus: after?.fields?.status?.name || matched.to?.name || null,
+          result: data || {},
+        }, null, 2));
       } catch (e) {
-        return createToolResult(`Error: ${e instanceof Error ? e.message : String(e)}`, true);
+        const err = normalizeJiraError(e);
+        return createToolResult(JSON.stringify({
+          ok: false,
+          issueKey: params.issueKey,
+          transitionId: params.transitionId,
+          error: err.category,
+          status: err.status || null,
+          message: err.message,
+          details: err.payload || null,
+        }, null, 2), true);
       }
     },
   }, { optional: true });

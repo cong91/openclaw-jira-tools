@@ -1,45 +1,105 @@
 {
-  "id": "jira-tools",
+  "id": "openclaw-jira-tools",
   "name": "Jira Tools",
   "description": "Native Jira agent tools for OpenClaw with config schema and per-agent defaults.",
-  "version": "0.1.0",
+  "version": "1.0.4",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "server": { "type": "string", "description": "Base Jira URL, e.g. https://your-domain.atlassian.net" },
-      "email": { "type": "string", "description": "Jira account email for basic auth" },
-      "token": { "type": "string", "description": "Jira API token" },
-      "defaultProject": { "type": "string", "description": "Default Jira project key", "default": "TAA" },
-      "language": { "type": "string", "description": "Content language", "default": "vi" },
-      "requireClickableLinks": { "type": "boolean", "description": "Force related links section in descriptions", "default": true },
+      "server": {
+        "type": "string",
+        "description": "Base Jira URL, e.g. https://your-domain.atlassian.net"
+      },
+      "email": {
+        "type": "string",
+        "description": "Jira account email for basic auth"
+      },
+      "token": {
+        "type": "string",
+        "description": "Jira API token"
+      },
+      "defaultProject": {
+        "type": "string",
+        "description": "Default Jira project key",
+        "default": "TAA"
+      },
+      "language": {
+        "type": "string",
+        "description": "Content language",
+        "default": "vi"
+      },
+      "requireClickableLinks": {
+        "type": "boolean",
+        "description": "Force related links section in descriptions",
+        "default": true
+      },
       "issueTypeMap": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "task": { "type": "string", "default": "Task" },
-          "epic": { "type": "string", "default": "Epic" },
-          "subtask": { "type": "string", "default": "Subtask" }
+          "task": {
+            "type": "string",
+            "default": "Task"
+          },
+          "epic": {
+            "type": "string",
+            "default": "Epic"
+          },
+          "subtask": {
+            "type": "string",
+            "default": "Subtask"
+          }
         }
       },
       "fieldMappings": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "epicName": { "type": "string", "default": "customfield_10011" },
-          "epicLink": { "type": "string", "default": "customfield_10014" },
-          "parentLink": { "type": "string", "default": "customfield_10018" }
+          "epicName": {
+            "type": "string",
+            "default": "customfield_10011"
+          },
+          "epicLink": {
+            "type": "string",
+            "default": "customfield_10014"
+          },
+          "parentLink": {
+            "type": "string",
+            "default": "customfield_10018"
+          }
         }
       }
     },
-    "required": ["server", "email", "token"]
+    "required": [
+      "server",
+      "email",
+      "token"
+    ]
   },
   "uiHints": {
-    "server": { "label": "Jira Server", "placeholder": "https://linktovn.atlassian.net" },
-    "email": { "label": "Jira Email", "placeholder": "name@example.com" },
-    "token": { "label": "Jira API Token", "sensitive": true },
-    "defaultProject": { "label": "Default Project", "placeholder": "TAA" },
-    "language": { "label": "Language", "placeholder": "vi" },
-    "requireClickableLinks": { "label": "Require Clickable Links" }
+    "server": {
+      "label": "Jira Server",
+      "placeholder": "https://linktovn.atlassian.net"
+    },
+    "email": {
+      "label": "Jira Email",
+      "placeholder": "name@example.com"
+    },
+    "token": {
+      "label": "Jira API Token",
+      "sensitive": true
+    },
+    "defaultProject": {
+      "label": "Default Project",
+      "placeholder": "TAA"
+    },
+    "language": {
+      "label": "Language",
+      "placeholder": "vi"
+    },
+    "requireClickableLinks": {
+      "label": "Require Clickable Links"
+    }
   }
 }

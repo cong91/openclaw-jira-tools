@@ -30,7 +30,14 @@ export class JiraClient {
       headers: { ...this.headers(), ...(init?.headers || {}) },
     });
     const text = await res.text();
-    const payload = text ? JSON.parse(text) : {};
+    let payload: any = {};
+    if (text) {
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        payload = { raw: text };
+      }
+    }
     if (!res.ok) throw new Error(`${res.status}: ${JSON.stringify(payload)}`);
     return payload;
   }
@@ -66,6 +73,10 @@ export class JiraClient {
 
   async getIssue(issueKey: string) {
     return this.request(`/rest/api/3/issue/${issueKey}`);
+  }
+
+  async getIssueTransitions(issueKey: string) {
+    return this.request(`/rest/api/3/issue/${issueKey}/transitions`);
   }
 
   async resolveAssigneeAccountId(email?: string, displayName?: string): Promise<string | undefined> {
